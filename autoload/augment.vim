@@ -302,7 +302,9 @@ function! augment#OnTextChangedI() abort
 endfunction
 
 function! augment#OnCursorMovedI() abort
-    call augment#suggestion#Clear()
+    " Clear ghost text but preserve the Lua buffer for blink.cmp suggestions
+    " Arguments: skip_resolution=true (don't reject), preserve_buffer=true (keep for menu)
+    call augment#suggestion#Clear(v:true, v:true)
 endfunction
 
 function! augment#OnInsertEnter() abort

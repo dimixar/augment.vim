@@ -4,7 +4,11 @@
 " Functions for interacting with augment suggestions
 
 " Clear the suggestion
+" Arguments:
+"   a:1 - skip_resolution (bool): if true, don't send reject telemetry to server
+"   a:2 - preserve_buffer (bool): if true, keep the Lua suggestion buffer (for blink.cmp)
 function! augment#suggestion#Clear(...) abort
+    " Clear the ghost text display
     if has('nvim')
         let ns_id = nvim_create_namespace('AugmentSuggestion')
         call nvim_buf_clear_namespace(0, ns_id, 0, -1)
@@ -15,16 +19,21 @@ function! augment#suggestion#Clear(...) abort
     let current = exists('b:_augment_suggestion') ? b:_augment_suggestion : {}
     let b:_augment_suggestion = {}
 
-    " Send the reject resolution, checking optional argument to skip
+    " Extract arguments with defaults
     let skip_resolution = a:0 > 0 ? a:1 : v:false
+    let preserve_buffer = a:0 > 1 ? a:2 : v:false
+
+    " Send the reject resolution, checking optional argument to skip
     if !empty(current) && !skip_resolution
         call augment#client#Client().Notify('augment/resolveCompletion', {
                     \ 'requestId': current.request_id,
                     \ 'accept': v:false,
                     \ })
         call augment#log#Debug('Rejected completion with request_id=' . current.request_id . ' text=' . string(current.lines))
+    endif
 
-        " Clear the suggestion buffer from LSP injection when explicitly rejected
+    " Clear the suggestion buffer only if not explicitly preserving it
+    if !preserve_buffer
         call luaeval('require("augment").clear_suggestion_buffer()')
     endif
 
