@@ -15,11 +15,14 @@ end
 -- Returns true if Augment has a suggestion available
 M.enabled = function(self)
     local augment = require('augment')
-    return augment.get_suggestion_buffer() ~= nil
+    local has_suggestion = augment.get_suggestion_buffer() ~= nil
+    vim.call('augment#log#Info', '[blink-augment] enabled() called, has_suggestion=' .. tostring(has_suggestion))
+    return has_suggestion
 end
 
 -- Get trigger characters - empty means trigger on any keyword change
 M.get_trigger_characters = function(self)
+    vim.call('augment#log#Info', '[blink-augment] get_trigger_characters() called')
     return {}
 end
 
@@ -29,10 +32,11 @@ M.get_completions = function(self, ctx, callback)
     local augment = require('augment')
     local suggestion_buffer = augment.get_suggestion_buffer()
 
-    vim.call('augment#log#Debug', 'blink source get_completions called. Has suggestion: ' .. tostring(suggestion_buffer ~= nil))
+    vim.call('augment#log#Info', '[blink-augment] get_completions() called, has_suggestion=' .. tostring(suggestion_buffer ~= nil))
 
     if suggestion_buffer then
         -- Return Augment suggestion as the only completion
+        vim.call('augment#log#Info', '[blink-augment] returning 1 item: ' .. (suggestion_buffer.label or 'no-label'))
         callback({
             is_incomplete_forward = false,
             is_incomplete_backward = false,
@@ -40,6 +44,7 @@ M.get_completions = function(self, ctx, callback)
         })
     else
         -- No suggestion available
+        vim.call('augment#log#Info', '[blink-augment] returning 0 items')
         callback({
             is_incomplete_forward = false,
             is_incomplete_backward = false,
@@ -54,6 +59,7 @@ end
 -- Resolve completion item - called for additional details
 -- For Augment, just return the item as-is
 M.resolve = function(self, item, callback)
+    vim.call('augment#log#Info', '[blink-augment] resolve() called')
     callback(item)
 end
 
@@ -64,9 +70,11 @@ M.execute = function(self, item, callback)
 
     -- If this is an Augment suggestion, notify that it was accepted
     if item.data and item.data.source == 'augment' then
-        vim.call('augment#log#Debug', 'blink source execute called for Augment suggestion')
+        vim.call('augment#log#Info', '[blink-augment] execute() called for Augment suggestion: ' .. (item.label or 'no-label'))
         -- Let augment know the suggestion was accepted (for analytics/telemetry)
         -- The actual text insertion is handled by blink.cmp via insertText
+    else
+        vim.call('augment#log#Info', '[blink-augment] execute() called but not an Augment item')
     end
 
     callback()

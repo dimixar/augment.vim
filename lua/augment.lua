@@ -153,7 +153,10 @@ end
 -- Create and return a blink.cmp source instance
 -- Used in blink.cmp configuration
 M.blink_source = function()
-    return require('blink_source_augment').new()
+    vim.call('augment#log#Info', 'Creating new blink.cmp source instance')
+    local source = require('blink_source_augment').new()
+    vim.call('augment#log#Info', 'blink.cmp source instance created')
+    return source
 end
 
 return M
