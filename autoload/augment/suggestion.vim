@@ -23,6 +23,9 @@ function! augment#suggestion#Clear(...) abort
                     \ 'accept': v:false,
                     \ })
         call augment#log#Debug('Rejected completion with request_id=' . current.request_id . ' text=' . string(current.lines))
+
+        " Clear the suggestion buffer from LSP injection when explicitly rejected
+        call luaeval('require("augment").clear_suggestion_buffer()')
     endif
 
     return current

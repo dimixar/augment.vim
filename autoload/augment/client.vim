@@ -127,6 +127,9 @@ function! s:HandleCompletion(client, params, result, err) abort
     let request_id = has_key(a:result[0], 'data') ? a:result[0].data : a:result[0].label
     call augment#suggestion#Show(text, request_id, req_line, req_col, req_changedtick)
 
+    " Update the suggestion buffer for injection into LSP completions (for blink.cmp)
+    call luaeval('require("augment").update_suggestion_buffer(_A[1], _A[2])', [text, request_id])
+
     call augment#log#Info('Received completion with request_id=' . request_id . ' text=' . text)
 
     " Trigger the CompletionUpdated autocommand (used for testing)

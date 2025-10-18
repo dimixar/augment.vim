@@ -3,8 +3,20 @@
 
 local M = {}
 
+-- Buffer to store the last Augment suggestion for injection into LSP completions
+local suggestion_buffer = nil
+
+-- Flag to track if completion injection is set up
+local completion_injection_setup = false
+
 -- Start the lsp client
 M.start_client = function(command, notification_methods, workspace_folders)
+    -- Set up completion injection on first client start
+    if not completion_injection_setup then
+        M.setup_completion_injection()
+        completion_injection_setup = true
+    end
+
     local vim_version = tostring(vim.version())
     local plugin_version = vim.call('augment#version#Version')
 
@@ -16,23 +28,11 @@ M.start_client = function(command, notification_methods, workspace_folders)
         end
     end
 
-    -- Custom handler for textDocument/completion to transform items before blink.cmp sees them
+    -- Custom handler for textDocument/completion for ghost text processing only
     handlers['textDocument/completion'] = function(err, result, ctx)
-        -- Transform completion items so blink.cmp shows code instead of GUIDs
-        if result then
-            for _, item in ipairs(result) do
-                -- Server sends: label=GUID (request ID), insertText=code suggestion
-                -- Swap them so completion engines display the actual code
-                if item.label and item.insertText then
-                    local temp = item.label
-                    item.label = item.insertText  -- Show code in completion menu
-                    item.data = temp  -- Store GUID in data field for request tracking
-                end
-            end
-        end
         -- Forward to VimScript handler for ghost text processing
+        -- The suggestion is now managed via suggestion_buffer and injected globally
         vim.call('augment#client#NvimResponse', 'textDocument/completion', ctx.params, result, err)
-        return result  -- Return transformed result to LSP client for broadcasting
     end
 
     local config = {
@@ -106,5 +106,54 @@ end
 
 -- Alias for accept() for API clarity
 M.accept_suggestion = M.accept
+
+-- Update the suggestion buffer with new Augment suggestion
+-- Called from VimScript when a suggestion is received
+M.update_suggestion_buffer = function(text, request_id)
+    if not text or text == '' then
+        suggestion_buffer = nil
+        return
+    end
+
+    -- Create a completion item with the suggestion
+    suggestion_buffer = {
+        label = text:sub(1, 100),  -- First 100 chars for label
+        insertText = text,
+        kind = 1,  -- CompletionItemKind.Text
+        sortText = '\0',  -- Sort first (null character sorts before everything)
+        data = {
+            source = 'augment',
+            request_id = request_id,
+        },
+    }
+end
+
+-- Clear the suggestion buffer
+M.clear_suggestion_buffer = function()
+    suggestion_buffer = nil
+end
+
+-- Inject Augment suggestion into LSP completion results
+-- This wraps the default completion handler to inject our suggestion
+M.setup_completion_injection = function()
+    -- Store original handler
+    local original_handler = vim.lsp.handlers['textDocument/completion']
+
+    -- Create new handler that injects our suggestion
+    vim.lsp.handlers['textDocument/completion'] = function(err, result, ctx, config)
+        -- Inject Augment suggestion if available
+        if suggestion_buffer and result then
+            -- Ensure result is a list
+            if type(result) == 'table' and result[1] then
+                table.insert(result, 1, suggestion_buffer)
+            end
+        end
+
+        -- Call original handler with potentially injected results
+        if original_handler then
+            return original_handler(err, result, ctx, config)
+        end
+    end
+end
 
 return M
