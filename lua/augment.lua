@@ -3,6 +3,14 @@
 
 local M = {}
 
+-- Configuration options for Augment
+M.config = {
+    -- Whether to broadcast Augment completions via LSP to other completion systems
+    -- Set to false if using blink.cmp source exclusively (prevents GUID duplication)
+    -- Set to true (default) for compatibility with nvim-cmp and other systems
+    broadcast_lsp_completions = true
+}
+
 -- Buffer to store the last Augment suggestion for injection into LSP completions
 local suggestion_buffer = nil
 
@@ -22,8 +30,17 @@ M.start_client = function(command, notification_methods, workspace_folders)
     -- Custom handler for textDocument/completion for ghost text processing only
     handlers['textDocument/completion'] = function(err, result, ctx)
         -- Forward to VimScript handler for ghost text processing
-        -- The suggestion is now managed via suggestion_buffer and injected globally
+        -- The suggestion is now managed via suggestion_buffer and handled by blink.cmp source
         vim.call('augment#client#NvimResponse', 'textDocument/completion', ctx.params, result, err)
+
+        -- Respect config: only broadcast to other systems if enabled
+        -- When using blink.cmp exclusively, set M.config.broadcast_lsp_completions = false
+        if not M.config.broadcast_lsp_completions then
+            -- Return empty to prevent broadcasting (avoids GUID duplication in blink.cmp)
+            return { items = {} }
+        end
+
+        -- Default: allow broadcasting for compatibility with other completion systems
     end
 
     local config = {
