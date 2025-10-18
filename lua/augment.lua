@@ -105,9 +105,12 @@ M.accept_suggestion = M.accept
 
 -- Update the suggestion buffer with new Augment suggestion
 -- Called from VimScript when a suggestion is received
+-- If text is empty, keeps the previous suggestion (don't clear it)
 M.update_suggestion_buffer = function(text, request_id)
     if not text or text == '' then
-        suggestion_buffer = nil
+        -- Don't clear buffer on empty response - keep the previous suggestion
+        -- This prevents the menu from flickering/disappearing when the server
+        -- returns empty results (which happens during typing at certain positions)
         return
     end
 
