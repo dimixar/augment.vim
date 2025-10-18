@@ -1,3 +1,6 @@
+# !!!!WARNING!!!!
+This fork has some modifications in order to make it work well with AstroNvim and its AI community plugin integration.
+--------------------------
 # Augment Vim & Neovim Plugin
 
 ## A Quick Tour
@@ -39,27 +42,27 @@ to start a chat conversation.
     - Manual installation (Vim):
 
         ```bash
-        git clone https://github.com/augmentcode/augment.vim.git \
-            ~/.vim/pack/augment/start/augment.vim
+        git clone https://github.com/dimixar/augment.vim.git \
+            ~/.vim/pack/dimixar/start/augment.vim
         ```
 
     - Manual installation (Neovim):
 
         ```bash
-        git clone https://github.com/augmentcode/augment.vim.git \
-            ~/.config/nvim/pack/augment/start/augment.vim
+        git clone https://github.com/dimixar/augment.vim.git \
+            ~/.config/nvim/pack/dimixar/start/augment.vim
         ```
 
     - Vim Plug:
 
         ```vim
-        Plug 'augmentcode/augment.vim'
+        Plug 'dimixar/augment.vim'
         ```
 
     - Lazy.nvim:
 
         ```lua
-        { 'augmentcode/augment.vim' },
+        { 'dimixar/augment.vim' },
         ```
 
 1. Add workspace folders to your config file. This is really essential to getting the most out of augment! See the [Workspace Folders](#workspace-folders) section for more information.
