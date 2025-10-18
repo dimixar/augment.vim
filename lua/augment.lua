@@ -69,9 +69,35 @@ M.request = function(client_id, method, params)
     end
 
     local _, id = client.request(method, params, function(err, result)
+        -- Transform completion items so blink.cmp shows the actual code instead of GUIDs
+        if method == 'textDocument/completion' and result then
+            for _, item in ipairs(result) do
+                -- Server sends: label=GUID (request ID), insertText=code suggestion
+                -- Swap them so completion engines display the actual code
+                if item.label and item.insertText then
+                    local temp = item.label
+                    item.label = item.insertText  -- Show code in completion menu
+                    item.data = temp  -- Store GUID in data field for request tracking
+                end
+            end
+        end
         vim.call('augment#client#NvimResponse', method, params, result, err)
     end)
     return id
 end
+
+-- Check if there is an active suggestion
+M.has_suggestion = function()
+    return vim.fn.exists('b:_augment_suggestion') == 1
+end
+
+-- Accept the currently active suggestion if one is available
+-- Returns true if a suggestion was accepted, false otherwise
+M.accept = function()
+    return vim.call('augment#suggestion#Accept')
+end
+
+-- Alias for accept() for API clarity
+M.accept_suggestion = M.accept
 
 return M

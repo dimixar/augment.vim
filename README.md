@@ -1,5 +1,57 @@
 # !!!!WARNING!!!!
 This fork has some modifications in order to make it work well with AstroNvim and its AI community plugin integration.
+
+## Fork Modifications
+
+### New Lua API for Completion Engine Integration
+
+This fork exposes Augment's suggestion system via Lua functions, allowing seamless integration with completion engines like blink.cmp.
+
+#### Available Functions
+
+**`require('augment').has_suggestion()`**
+- Returns `true` if an active Augment ghost text suggestion exists, `false` otherwise
+- Useful for checking if a suggestion is available before attempting to accept it
+
+**`require('augment').accept()`**
+- Accepts the currently active Augment suggestion if one exists
+- Returns `true` if a suggestion was accepted, `false` otherwise
+- This is the primary function for integration with external completion engines
+
+**`require('augment').accept_suggestion()`**
+- Alias for `accept()` for API clarity
+
+#### Integration with blink.cmp
+
+You can integrate Augment suggestions with your blink.cmp configuration in AstroNvim. Here's an example:
+
+```lua
+return {
+  "Saghen/blink.cmp",
+  optional = true,
+  opts = function(_, opts)
+    if not opts.keymap then opts.keymap = {} end
+
+    opts.keymap["<Tab>"] = {
+      "snippet_forward",
+      function()
+        -- Check if Augment has a suggestion and accept it
+        if require('augment').accept() then
+          return  -- Suggestion accepted
+        end
+      end,
+      "fallback",
+    }
+  end,
+}
+```
+
+#### How It Works
+
+- **Ghost Text + Completion Menu**: Augment displays suggestions as inline ghost text while also exposing them to blink.cmp
+- **Smart Completion Item Format**: Completion items now display the actual code suggestion in the menu (not GUIDs)
+- **Flexible Integration**: The Lua API is completion engine-agnostic, so you can use it with any completion system
+
 --------------------------
 # Augment Vim & Neovim Plugin
 

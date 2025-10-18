@@ -123,7 +123,8 @@ function! s:HandleCompletion(client, params, result, err) abort
 
     " Show the completion
     let text = a:result[0].insertText
-    let request_id = a:result[0].label
+    " The request ID is now stored in the data field (swapped in lua/augment.lua)
+    let request_id = has_key(a:result[0], 'data') ? a:result[0].data : a:result[0].label
     call augment#suggestion#Show(text, request_id, req_line, req_col, req_changedtick)
 
     call augment#log#Info('Received completion with request_id=' . request_id . ' text=' . text)
