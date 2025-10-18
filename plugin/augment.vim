@@ -122,7 +122,7 @@ function! s:SetupVirtualText() abort
 endfunction
 
 function! s:SetupKeybinds() abort
-    if !exists('g:augment_disable_tab_mapping') || !g:augment_disable_tab_mapping
+    if exists('g:augment_disable_tab_mapping') && !g:augment_disable_tab_mapping
         inoremap <tab> <cmd>call augment#Accept("\<tab>")<cr>
     endif
 endfunction

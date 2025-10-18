@@ -209,12 +209,18 @@ reopened with the same command.
 
 ## Alternate Keybinds
 
-By default, tab is used to accept a suggestion. If you want to use a
-different key, create a mapping that calls `augment#Accept()`. The function
+Tab mapping is **disabled by default**. To enable the default tab mapping for accepting
+suggestions, set `g:augment_disable_tab_mapping = v:false` before the plugin is loaded.
+
+To use a different key or create custom mappings, use `augment#Accept()`. The function
 takes an optional argument used to specify the fallback text to insert if no
 suggestion is available.
 
 ```vim
+" Enable default tab mapping
+let g:augment_disable_tab_mapping = v:false
+
+" Or create a custom mapping with a different key
 " Use Ctrl-Y to accept a suggestion
 inoremap <c-y> <cmd>call augment#Accept()<cr>
 
@@ -222,9 +228,6 @@ inoremap <c-y> <cmd>call augment#Accept()<cr>
 " is available
 inoremap <cr> <cmd>call augment#Accept("\n")<cr>
 ```
-
-The default tab mapping can be disabled by setting
-`g:augment_disable_tab_mapping = v:true` before the plugin is loaded.
 
 Completions can be disabled entirely by setting
 `g:augment_disable_completions = v:true` in your vimrc or at any time during
