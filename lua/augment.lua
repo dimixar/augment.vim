@@ -29,6 +29,11 @@ M.start_client = function(command, notification_methods, workspace_folders)
     local config = {
         name = 'Augment Server',
         cmd = command,
+        capabilities = {
+            textDocument = {
+                completion = vim.NIL,  -- Disable LSP completion to use only custom blink.cmp source
+            },
+        },
         init_options = {
             editor = 'nvim',
             vimVersion = vim_version,
