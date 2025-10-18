@@ -3,14 +3,6 @@
 
 local M = {}
 
--- Configuration options for Augment
-M.config = {
-    -- Whether to broadcast Augment completions via LSP to other completion systems
-    -- Set to false if using blink.cmp source exclusively (prevents GUID duplication)
-    -- Set to true (default) for compatibility with nvim-cmp and other systems
-    broadcast_lsp_completions = true
-}
-
 -- Buffer to store the last Augment suggestion for injection into LSP completions
 local suggestion_buffer = nil
 
@@ -33,14 +25,38 @@ M.start_client = function(command, notification_methods, workspace_folders)
         -- The suggestion is now managed via suggestion_buffer and handled by blink.cmp source
         vim.call('augment#client#NvimResponse', 'textDocument/completion', ctx.params, result, err)
 
-        -- Respect config: only broadcast to other systems if enabled
-        -- When using blink.cmp exclusively, set M.config.broadcast_lsp_completions = false
-        if not M.config.broadcast_lsp_completions then
-            -- Return empty to prevent broadcasting (avoids GUID duplication in blink.cmp)
-            return { items = {} }
+        -- Transform completion items to replace GUID labels with code preview
+        -- This ensures blink.cmp and other systems show actual code, not GUIDs
+        if result and type(result) == 'table' and #result > 0 then
+            for _, item in ipairs(result) do
+                if item.label then
+                    -- Store the GUID in data field for telemetry if not already there
+                    if not item.data then
+                        item.data = {}
+                    end
+                    if not item.data.request_id then
+                        item.data.request_id = item.label
+                    end
+
+                    -- Replace label with first line of insertText (the actual code)
+                    if item.insertText then
+                        local first_line = item.insertText:match('[^\n]*')
+                        -- Truncate to reasonable length for display
+                        if first_line and #first_line > 100 then
+                            item.label = first_line:sub(1, 97) .. '...'
+                        else
+                            item.label = first_line or ''
+                        end
+                    else
+                        -- If no insertText, leave label empty
+                        item.label = ''
+                    end
+                end
+            end
         end
 
-        -- Default: allow broadcasting for compatibility with other completion systems
+        -- Return the transformed result
+        return result
     end
 
     local config = {
@@ -73,10 +89,6 @@ M.start_client = function(command, notification_methods, workspace_folders)
     end
 
     local id = vim.lsp.start_client(config)
-
-    -- Store the client ID in a global variable so blink.cmp can exclude it
-    vim.g.augment_client_id = id
-
     return id
 end
 
