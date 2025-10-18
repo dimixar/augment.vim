@@ -73,6 +73,10 @@ M.start_client = function(command, notification_methods, workspace_folders)
     end
 
     local id = vim.lsp.start_client(config)
+
+    -- Store the client ID in a global variable so blink.cmp can exclude it
+    vim.g.augment_client_id = id
+
     return id
 end
 
