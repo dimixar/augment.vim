@@ -23,25 +23,49 @@ This fork exposes Augment's suggestion system via Lua functions, allowing seamle
 
 #### Integration with blink.cmp
 
-You can integrate Augment suggestions with your blink.cmp configuration in AstroNvim. Here's an example:
+Augment provides a custom blink.cmp source that makes suggestions appear directly in the completion menu. This is the recommended integration method for AstroNvim.
+
+**Configuration:**
+
+Add the Augment source to your blink.cmp sources in AstroNvim:
 
 ```lua
 return {
   "Saghen/blink.cmp",
   optional = true,
-  opts = function(_, opts)
-    if not opts.keymap then opts.keymap = {} end
+  opts = {
+    sources = {
+      default = { "augment", "lsp", "path", "snippets", "buffer" },
+      providers = {
+        augment = {
+          name = "augment",
+          module = "blink_source_augment",
+          enabled = function()
+            return require('augment').get_suggestion_buffer() ~= nil
+          end,
+        },
+      },
+    },
+  },
+}
+```
 
-    opts.keymap["<Tab>"] = {
-      "snippet_forward",
-      function()
-        -- Check if Augment has a suggestion and accept it
-        if require('augment').accept() then
-          return  -- Suggestion accepted
-        end
-      end,
-      "fallback",
-    }
+Or more simply using the blink_source factory:
+
+```lua
+{
+  "Saghen/blink.cmp",
+  optional = true,
+  opts = function(_, opts)
+    if not opts.sources then opts.sources = {} end
+    if not opts.sources.default then opts.sources.default = {} end
+    if not opts.sources.providers then opts.sources.providers = {} end
+
+    -- Add augment to default sources (before lsp for priority)
+    table.insert(opts.sources.default, 1, "augment")
+
+    -- Register the Augment source
+    opts.sources.providers.augment = require('augment').blink_source()
   end,
 }
 ```

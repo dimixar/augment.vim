@@ -6,17 +6,8 @@ local M = {}
 -- Buffer to store the last Augment suggestion for injection into LSP completions
 local suggestion_buffer = nil
 
--- Flag to track if completion injection is set up
-local completion_injection_setup = false
-
 -- Start the lsp client
 M.start_client = function(command, notification_methods, workspace_folders)
-    -- Set up completion injection on first client start
-    if not completion_injection_setup then
-        M.setup_completion_injection()
-        completion_injection_setup = true
-    end
-
     local vim_version = tostring(vim.version())
     local plugin_version = vim.call('augment#version#Version')
 
@@ -148,54 +139,16 @@ M.clear_suggestion_buffer = function()
     suggestion_buffer = nil
 end
 
--- Inject Augment suggestion into LSP completion results
--- This wraps the default completion handler to inject our suggestion
-M.setup_completion_injection = function()
-    -- Store original handler
-    local original_handler = vim.lsp.handlers['textDocument/completion']
+-- Get the current suggestion buffer (for external use like blink.cmp source)
+M.get_suggestion_buffer = function()
+    return suggestion_buffer
+end
 
-    -- Create new handler that injects our suggestion
-    vim.lsp.handlers['textDocument/completion'] = function(err, result, ctx, config)
-        -- Debug: Log when handler is called
-        if result then
-            vim.call('augment#log#Debug', 'LSP completion handler invoked. Result type: ' .. type(result) .. ', Has items: ' .. tostring(result.items ~= nil))
-        end
 
-        -- Inject Augment suggestion if available
-        if suggestion_buffer and result then
-            local items = nil
-
-            -- Handle both LSP response formats: array and CompletionList
-            if type(result) == 'table' then
-                if result.items then
-                    -- CompletionList format: {items: [...], isIncomplete: bool}
-                    items = result.items
-                    vim.call('augment#log#Debug', 'CompletionList format detected. Items count: ' .. #items)
-                else
-                    -- Array format: [{...}, {...}]
-                    items = result
-                    vim.call('augment#log#Debug', 'Array format detected. Items count: ' .. #items)
-                end
-
-                -- Inject Augment suggestion at the beginning
-                if items then
-                    table.insert(items, 1, suggestion_buffer)
-                    vim.call('augment#log#Debug', 'Injected Augment suggestion. New items count: ' .. #items)
-                end
-            end
-        else
-            if not suggestion_buffer then
-                vim.call('augment#log#Debug', 'LSP completion handler: suggestion_buffer is empty')
-            end
-        end
-
-        -- Call original handler with potentially injected results
-        if original_handler then
-            return original_handler(err, result, ctx, config)
-        end
-    end
-
-    vim.call('augment#log#Info', 'LSP completion injection handler set up')
+-- Create and return a blink.cmp source instance
+-- Used in blink.cmp configuration
+M.blink_source = function()
+    return require('blink_source_augment').new()
 end
 
 return M
