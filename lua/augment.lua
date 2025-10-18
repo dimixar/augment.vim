@@ -115,17 +115,32 @@ M.update_suggestion_buffer = function(text, request_id)
         return
     end
 
+    -- Truncate label to first line for display
+    local label_text = text:match('[^\n]*')
+    if not label_text or label_text == '' then
+        label_text = text:sub(1, 100)
+    else
+        -- Truncate to reasonable length
+        if #label_text > 100 then
+            label_text = label_text:sub(1, 97) .. '...'
+        end
+    end
+
     -- Create a completion item with the suggestion
     suggestion_buffer = {
-        label = text:sub(1, 100),  -- First 100 chars for label
+        label = label_text,
+        filterText = label_text,
         insertText = text,
         kind = 1,  -- CompletionItemKind.Text
         sortText = '\0',  -- Sort first (null character sorts before everything)
+        documentation = 'Augment suggestion',
         data = {
             source = 'augment',
             request_id = request_id,
         },
     }
+
+    vim.call('augment#log#Debug', 'Suggestion buffer updated. Label: ' .. label_text:sub(1, 50))
 end
 
 -- Clear the suggestion buffer
@@ -141,11 +156,36 @@ M.setup_completion_injection = function()
 
     -- Create new handler that injects our suggestion
     vim.lsp.handlers['textDocument/completion'] = function(err, result, ctx, config)
+        -- Debug: Log when handler is called
+        if result then
+            vim.call('augment#log#Debug', 'LSP completion handler invoked. Result type: ' .. type(result) .. ', Has items: ' .. tostring(result.items ~= nil))
+        end
+
         -- Inject Augment suggestion if available
         if suggestion_buffer and result then
-            -- Ensure result is a list
-            if type(result) == 'table' and result[1] then
-                table.insert(result, 1, suggestion_buffer)
+            local items = nil
+
+            -- Handle both LSP response formats: array and CompletionList
+            if type(result) == 'table' then
+                if result.items then
+                    -- CompletionList format: {items: [...], isIncomplete: bool}
+                    items = result.items
+                    vim.call('augment#log#Debug', 'CompletionList format detected. Items count: ' .. #items)
+                else
+                    -- Array format: [{...}, {...}]
+                    items = result
+                    vim.call('augment#log#Debug', 'Array format detected. Items count: ' .. #items)
+                end
+
+                -- Inject Augment suggestion at the beginning
+                if items then
+                    table.insert(items, 1, suggestion_buffer)
+                    vim.call('augment#log#Debug', 'Injected Augment suggestion. New items count: ' .. #items)
+                end
+            end
+        else
+            if not suggestion_buffer then
+                vim.call('augment#log#Debug', 'LSP completion handler: suggestion_buffer is empty')
             end
         end
 
@@ -154,6 +194,8 @@ M.setup_completion_injection = function()
             return original_handler(err, result, ctx, config)
         end
     end
+
+    vim.call('augment#log#Info', 'LSP completion injection handler set up')
 end
 
 return M
