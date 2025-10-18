@@ -76,6 +76,26 @@ Or more simply using the blink_source factory:
 - **Smart Completion Item Format**: Completion items now display the actual code suggestion in the menu (not GUIDs)
 - **Flexible Integration**: The Lua API is completion engine-agnostic, so you can use it with any completion system
 
+#### Preventing GUID Duplication (blink.cmp-only Setup)
+
+When using blink.cmp exclusively, you may see duplicate Augment suggestions in the completion menu - one showing the GUID and another showing the actual code. To prevent this, disable LSP broadcasting:
+
+```lua
+config = function()
+  require('augment').config.broadcast_lsp_completions = false
+end,
+```
+
+This setting tells Augment to return empty results from the LSP completion handler, preventing duplication when blink.cmp queries the Augment source directly. The default value is `true` for backward compatibility with other completion systems (nvim-cmp, vim-lsp-cmp, etc.).
+
+**When to use this:**
+- Using blink.cmp as your only completion engine
+- Seeing GUID items in the completion menu alongside actual Augment suggestions
+
+**When NOT to use this:**
+- Using multiple completion engines (e.g., nvim-cmp alongside blink.cmp)
+- Want Augment to work with other LSP-based completion systems
+
 --------------------------
 # Augment Vim & Neovim Plugin
 
