@@ -16,6 +16,25 @@ M.start_client = function(command, notification_methods, workspace_folders)
         end
     end
 
+    -- Custom handler for textDocument/completion to transform items before blink.cmp sees them
+    handlers['textDocument/completion'] = function(err, result, ctx)
+        -- Transform completion items so blink.cmp shows code instead of GUIDs
+        if result then
+            for _, item in ipairs(result) do
+                -- Server sends: label=GUID (request ID), insertText=code suggestion
+                -- Swap them so completion engines display the actual code
+                if item.label and item.insertText then
+                    local temp = item.label
+                    item.label = item.insertText  -- Show code in completion menu
+                    item.data = temp  -- Store GUID in data field for request tracking
+                end
+            end
+        end
+        -- Forward to VimScript handler for ghost text processing
+        vim.call('augment#client#NvimResponse', 'textDocument/completion', ctx.params, result, err)
+        return result  -- Return transformed result to LSP client for broadcasting
+    end
+
     local config = {
         name = 'Augment Server',
         cmd = command,
@@ -69,18 +88,6 @@ M.request = function(client_id, method, params)
     end
 
     local _, id = client.request(method, params, function(err, result)
-        -- Transform completion items so blink.cmp shows the actual code instead of GUIDs
-        if method == 'textDocument/completion' and result then
-            for _, item in ipairs(result) do
-                -- Server sends: label=GUID (request ID), insertText=code suggestion
-                -- Swap them so completion engines display the actual code
-                if item.label and item.insertText then
-                    local temp = item.label
-                    item.label = item.insertText  -- Show code in completion menu
-                    item.data = temp  -- Store GUID in data field for request tracking
-                end
-            end
-        end
         vim.call('augment#client#NvimResponse', method, params, result, err)
     end)
     return id
