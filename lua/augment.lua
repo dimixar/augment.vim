@@ -160,12 +160,15 @@ M.update_suggestion_buffer = function(text, request_id)
 
     -- Create a completion item with the suggestion
     suggestion_buffer = {
-        label = label_text,
+        label = '[AI] ' .. label_text,
         filterText = label_text,
         insertText = text,
         kind = 1,  -- CompletionItemKind.Text
         sortText = '\0',  -- Sort first (null character sorts before everything)
-        documentation = 'Augment suggestion',
+        documentation = {
+            kind = 'markdown',
+            value = '**Augment AI Suggestion**\n\n```\n' .. text .. '\n```\n\nThis is Augment\'s latest AI-generated code suggestion.',
+        },
         data = {
             source = 'augment',
             request_id = request_id,
