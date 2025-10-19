@@ -73,20 +73,23 @@ Or more simply using the blink_source factory:
 #### How It Works
 
 - **Ghost Text + Completion Menu**: Augment displays suggestions as inline ghost text while also exposing them to blink.cmp
-- **Smart Completion Item Format**: Completion items now display the actual code suggestion in the menu (not GUIDs)
+- **AI-Marked Suggestions**: Each suggestion is clearly prefixed with `[AI]` in the menu
+- **Detailed Preview**: View the complete code and explanation in the detail popup
 - **Flexible Integration**: The Lua API is completion engine-agnostic, so you can use it with any completion system
 
-#### LSP Label Transformation
+#### Suggestion Display
 
-Augment automatically transforms LSP completion item labels from GUIDs to code previews. This ensures that blink.cmp, nvim-cmp, and other LSP-based completion engines display actual code instead of GUIDs in their menus.
+Augment suggestions appear in the completion menu with the `[AI]` prefix, making them easily identifiable. When you hover over or view the suggestion details, you'll see:
+- The complete AI-generated code
+- A clear label indicating it's an Augment suggestion
+- Full context for informed code acceptance
 
-The first line of the code suggestion is extracted and used as the label (truncated to 100 characters if needed). The original GUID is preserved in the item's `data.request_id` field for telemetry purposes.
-
-**Result:**
-- ✅ blink.cmp menu shows actual code instead of GUIDs
-- ✅ Works seamlessly with all LSP-based completion systems
-- ✅ No additional configuration required
-- ✅ Ghost text continues to work as expected
+**Features:**
+- Clear `[AI]` indicator in the completion menu
+- Full code preview in documentation popup
+- Works seamlessly with blink.cmp and other LSP-based completion systems
+- Ghost text and menu suggestions work together
+- No additional configuration required
 
 --------------------------
 # Augment Vim & Neovim Plugin
