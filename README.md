@@ -91,6 +91,89 @@ Augment suggestions appear in the completion menu with the `[AI]` prefix, making
 - Ghost text and menu suggestions work together
 - No additional configuration required
 
+#### AstroNvim Configuration
+
+> **NOTE:** This fork has been tested and verified to work with AstroNvim, including integration with blink.cmp and the AI accept functionality.
+
+**Example AstroNvim configuration (`~/.config/nvim/lua/plugins/user.lua`):**
+
+```lua
+{
+  "dimixar/augment.vim",
+  lazy = false,
+  init = function()
+    vim.g.augment_disable_tab_mapping = true
+  end,
+  opts = {
+    autocmds = {
+      augment_workspace_setup = {
+        event = "VimEnter",
+        description = "Sets the current path where nvim was opened as the workspace folder.",
+        callback = function()
+          vim.g.augment_workspace_folders = {vim.fn.getcwd()}
+        end,
+      },
+    },
+  },
+  specs = {
+    {
+      "AstroNvim/astrocore",
+      opts = {
+        options = {
+          g = {
+            ai_accept = function()
+              local blink = require('blink.cmp')
+              if blink.is_menu_visible() then
+                return false
+              end
+              local augment = require('augment')
+              if augment.has_suggestion() then
+                vim.schedule(function()
+                  augment.accept_suggestion()
+                end)
+                return true
+              end
+              return false
+            end,
+          },
+        },
+      },
+    },
+    {
+      "Saghen/blink.cmp",
+      optional = true,
+      opts = function(_, opts)
+        opts.sources = opts.sources or {}
+        opts.sources.default = opts.sources.default or {}
+        opts.sources.providers = opts.sources.providers or {}
+        table.insert(opts.sources.default, 1, "augment")
+        opts.sources.providers.augment = {
+          name = "augment",
+          module = "blink_source_augment",
+        }
+        if not opts.keymap then opts.keymap = {} end
+        opts.keymap["<Tab>"] = {
+          "snippet_forward",
+          function()
+            if vim.g.ai_accept then
+              return vim.g.ai_accept()
+            end
+          end,
+          "select_next",
+          "fallback",
+        }
+        return opts
+      end,
+    },
+  },
+}
+```
+
+This configuration:
+- Integrates with AstroNvim's `ai_accept` hook for seamless ghost text acceptance
+- Registers Augment as a blink.cmp source for menu suggestions
+- Overrides TAB keymap to support both menu cycling and AI suggestion acceptance
+
 --------------------------
 # Augment Vim & Neovim Plugin
 
