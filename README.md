@@ -1,5 +1,6 @@
 # !!!!WARNING!!!!
 This fork has some modifications in order to make it work well with AstroNvim and its AI community plugin integration.
+MOST OF THE CODE WAS SLOPPED TOGETHER BY CLAUDE CODE.
 
 ## Fork Modifications
 
