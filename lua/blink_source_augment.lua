@@ -38,7 +38,7 @@ M.get_completions = function(self, ctx, callback)
         -- Return Augment suggestion as the only completion
         vim.call('augment#log#Info', '[blink-augment] returning 1 item: ' .. (suggestion_buffer.label or 'no-label'))
         callback({
-            is_incomplete_forward = false,
+            is_incomplete_forward = true,
             is_incomplete_backward = false,
             items = { suggestion_buffer },
         })
@@ -46,7 +46,7 @@ M.get_completions = function(self, ctx, callback)
         -- No suggestion available
         vim.call('augment#log#Info', '[blink-augment] returning 0 items')
         callback({
-            is_incomplete_forward = false,
+            is_incomplete_forward = true,
             is_incomplete_backward = false,
             items = {},
         })
