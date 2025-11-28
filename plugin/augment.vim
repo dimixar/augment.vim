@@ -145,9 +145,9 @@ augroup augment_vim
 
     autocmd VimEnter * call augment#OnVimEnter()
     autocmd BufEnter * call augment#OnBufEnter()
-    autocmd TextChanged * call augment#OnTextChanged()
+    " TextChanged removed - no completions needed in normal mode
     autocmd TextChangedI * call augment#OnTextChangedI()
-    autocmd CursorMovedI * call augment#OnCursorMovedI()
+    " CursorMovedI removed - no completions on cursor movement, eliminates jk lag
     autocmd InsertEnter * call augment#OnInsertEnter()
     autocmd InsertLeavePre * call augment#OnInsertLeavePre()
 augroup END

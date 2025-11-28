@@ -5,11 +5,13 @@ I only made sure that it works, and that the example configurations are correct 
 
 ## Fork Modifications
 
-### Performance: Logging Disabled by Default
+### Performance Optimizations
 
-Logging is **disabled by default** in this fork to prevent performance degradation during extended editing sessions. The original plugin performs blocking file I/O on every completion event, which can cause noticeable lag.
+This fork includes several performance improvements to prevent lag during extended editing sessions:
 
-To enable logging for debugging purposes, set this option **before** the plugin loads:
+**1. Logging Disabled by Default**
+
+Logging is **disabled by default** to prevent blocking file I/O on every completion event. To enable logging for debugging:
 
 ```lua
 vim.g.augment_enable_logging = true
@@ -19,6 +21,18 @@ Or in Vimscript:
 ```vim
 let g:augment_enable_logging = v:true
 ```
+
+**2. Reduced Autocmd Frequency**
+
+Completions are requested only when:
+- **Entering insert mode** (`InsertEnter`)
+- **Typing text** (`TextChangedI`)
+
+Removed autocmds:
+- `CursorMovedI` - No longer triggers on cursor movement (jk/arrows), eliminating navigation lag
+- `TextChanged` - No completions in normal mode (unnecessary)
+
+This dramatically reduces completion request frequency, especially during cursor navigation in insert mode.
 
 ### New Lua API for Completion Engine Integration
 
