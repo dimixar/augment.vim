@@ -3,9 +3,19 @@
 
 " Logging functionality
 
+" Check if logging is enabled (disabled by default for performance)
+function! s:IsLoggingEnabled() abort
+    return exists('g:augment_enable_logging') && g:augment_enable_logging
+endfunction
+
 " Return the file to be used for logging. If the user has provided a log file,
 " use that. Otherwise, create a temporary one.
 function! s:GetLogFile() abort
+    " Don't create log file if logging is disabled
+    if !s:IsLoggingEnabled()
+        return ''
+    endif
+
     if exists('g:augment_log_file')
         let log_file = g:augment_log_file
     else
@@ -47,20 +57,36 @@ function! s:Log(message, level) abort
 endfunction
 
 function! augment#log#Debug(message) abort
+    " Debug logging requires both logging enabled AND debug flag
+    if !s:IsLoggingEnabled()
+        return
+    endif
     if exists('g:augment_debug') && g:augment_debug
         call s:Log(a:message, '[DEBUG]')
     endif
 endfunction
 
 function! augment#log#Info(message) abort
+    " Early return if logging is disabled (default)
+    if !s:IsLoggingEnabled()
+        return
+    endif
     call s:Log(a:message, '[INFO]')
 endfunction
 
 function! augment#log#Warn(message) abort
+    " Early return if logging is disabled (default)
+    if !s:IsLoggingEnabled()
+        return
+    endif
     call s:Log(a:message, '[WARN]')
 endfunction
 
 function! augment#log#Error(message) abort
+    " Early return if logging is disabled (default)
+    if !s:IsLoggingEnabled()
+        return
+    endif
     call s:Log(a:message, '[ERROR]')
 endfunction
 

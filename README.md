@@ -5,6 +5,21 @@ I only made sure that it works, and that the example configurations are correct 
 
 ## Fork Modifications
 
+### Performance: Logging Disabled by Default
+
+Logging is **disabled by default** in this fork to prevent performance degradation during extended editing sessions. The original plugin performs blocking file I/O on every completion event, which can cause noticeable lag.
+
+To enable logging for debugging purposes, set this option **before** the plugin loads:
+
+```lua
+vim.g.augment_enable_logging = true
+```
+
+Or in Vimscript:
+```vim
+let g:augment_enable_logging = v:true
+```
+
 ### New Lua API for Completion Engine Integration
 
 This fork exposes Augment's suggestion system via Lua functions, allowing seamless integration with completion engines like blink.cmp.
